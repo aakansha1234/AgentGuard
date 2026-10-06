@@ -1,0 +1,84 @@
+[project]
+name = "agentguard"
+version = "0.1.0"
+description = "Policy gateway that checks an agent's tool calls against rules before they execute."
+license = "MIT"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    "fastapi>=0.141.1",
+    "httpx2>=2.5.0",
+    "jsonschema>=4.26",
+    "mcp>=2.2,<3",
+    "pydantic>=2.13.5",
+    "pyyaml>=6.0.3",
+    "uvicorn[standard]>=0.54.0",
+]
+
+[project.scripts]
+agentguard = "agentguard.cli:main"
+
+[project.optional-dependencies]
+jev = [
+    "typesafe-sdk>=0.7.2",
+]
+# For examples/: agents on the Claude API or the OpenAI API, connected through AgentGuard.
+examples = [
+    "anthropic[mcp]>=1.0",
+    "openai>=2.0",
+]
+
+[build-system]
+requires = ["uv_build>=0.12.13,<0.13.0"]
+build-backend = "uv_build"
+
+[dependency-groups]
+dev = [
+    "anthropic[mcp]>=1.0",
+    "httpx>=0.28.1",
+    "openai>=2.0",
+    "playwright>=1.63.0",
+    "pyright>=1.1.414",
+    "pytest>=9.1.1",
+    "pytest-asyncio>=1.4.0",
+    "ruff>=0.16.9",
+    "typesafe-sdk>=0.7.2",
+]
+
+[tool.uv]
+default-groups = ["dev"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+asyncio_mode = "auto"
+asyncio_default_fixture_loop_scope = "function"
+markers = [
+    "live: runs real Claude Code (uses your Claude subscription); enable with AGENTGUARD_LIVE_TESTS=1",
+    "browser: drives the dashboard in a headless browser; needs playwright + chromium",
+]
+filterwarnings = [
+    "ignore::DeprecationWarning:websockets.*",
+    "ignore::DeprecationWarning:uvicorn.*",
+]
+
+[tool.ruff]
+line-length = 110
+target-version = "py312"
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "B", "UP", "S", "SIM", "RUF", "ASYNC"]
+ignore = [
+    "S101",   # assert is fine in tests and for invariants
+    "S603",   # subprocess launched with a fixed argv list, never a shell
+    "RUF001", # allow unicode punctuation in user-facing strings
+]
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["S105", "S106", "S108", "S311", "ASYNC"]
+
+[tool.pyright]
+include = ["src", "tests", "examples"]
+pythonVersion = "3.12"
+typeCheckingMode = "standard"
+venvPath = "."
+venv = ".venv"

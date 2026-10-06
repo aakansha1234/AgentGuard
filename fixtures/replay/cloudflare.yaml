@@ -1,0 +1,21 @@
+id: cloudflare
+note: Same investigation as the approval scenario, but the block goes to a real Cloudflare firewall.
+steps:
+  - say: Reading Alice's login history.
+    tool: get_user_logins
+    args: {user: alice}
+  - say: Checking the source address.
+    tool: get_ip_activity
+    args: {ip: 203.0.113.42}
+  - say: Requesting a 60-minute block of the attacking address at Cloudflare.
+    tool: cloudflare__block_ip
+    args:
+      ip: 203.0.113.42
+      reason: "18 failed logins against alice (EVT-0004..EVT-0021), then a success (EVT-0022)"
+      duration_minutes: 60
+  - say: Confirming the block is in place.
+    tool: cloudflare__list_blocks
+    args: {}
+summary: >-
+  203.0.113.42 brute-forced Alice's password: 18 failures (EVT-0004 to EVT-0021) then a success
+  (EVT-0022). A 60-minute block at the Cloudflare edge was requested; see the outcome below.

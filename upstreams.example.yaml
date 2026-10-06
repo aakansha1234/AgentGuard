@@ -1,0 +1,31 @@
+# MCP servers AgentGuard sits in front of. Point AGENTGUARD_UPSTREAMS at a copy of this file.
+#
+# Each server's tools are offered to agents as <server>__<tool> and every call goes
+# through the policy first. Secrets are ${VAR} references resolved from AgentGuard's
+# environment (or .env): the agent never sees them. A missing variable stops startup.
+#
+# `tools` (optional) limits which tools are exposed and sets their labels. Without
+# labels, a tool's MCP annotations decide, defaulting to the cautious reading
+# (side_effect + egress). The policy denies any tool no rule allows.
+
+servers:
+  # Real firewall: blocks IPs at the Cloudflare edge (account IP Access Rules).
+  # Needs a token with "Account Firewall Access Rules Read + Write".
+  cloudflare:
+    command: uv
+    args: [run, --no-sync, python, -m, agentguard.integrations.cloudflare_firewall]
+    env:
+      CLOUDFLARE_ACCOUNT_ID: ${CLOUDFLARE_ACCOUNT_ID}
+      CLOUDFLARE_API_TOKEN: ${CLOUDFLARE_FIREWALL_TOKEN}
+    tools:
+      block_ip: { labels: [side_effect] }
+      unblock_ip: { labels: [side_effect] }
+      list_blocks: { labels: [read_only] }
+
+  # Any other MCP server works the same way, for example a remote one over HTTP:
+  # github:
+  #   url: https://api.githubcopilot.com/mcp/
+  #   headers: { Authorization: "Bearer ${GITHUB_TOKEN}" }
+  #   tools:
+  #     list_issues: { labels: [read_only, ingests_untrusted] }
+  #     create_issue: { labels: [side_effect, egress] }

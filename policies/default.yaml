@@ -1,0 +1,164 @@
+# AgentGuard policy for the SOC login-investigation agent.
+#
+# Evaluation: builtin checks first (unknown tool, invalid arguments, run not
+# active, limits). Then every rule whose `match` selects the tool and whose
+# `when` conditions all hold applies. Deny beats require_approval beats allow.
+# Nothing applies -> denied by default.
+#
+# Paths available to conditions:
+#   args.*     validated, canonical tool arguments
+#   facts.*    values derived from arguments (e.g. facts.url_host)
+#   run.*      server-side run binding: run.subject, run.dataset_id, run.mode, run.task
+#   session.*  what happened earlier in this run: session.labels,
+#              session.seen_ips, session.seen_event_ids, session.tool_calls
+#   tool.*     tool.name, tool.labels
+
+schema_version: 1
+name: soc-investigation
+description: Read-only investigation of one user's logins; firewall changes need a human; no data leaves.
+default_effect: deny
+approval_ttl_seconds: 300
+on_human_deny: continue
+
+limits:
+  max_tool_calls: 16
+  max_run_seconds: 600
+  max_policy_denials: 3
+
+lists:
+  protected_networks:
+    - 10.0.0.0/8
+    - 172.16.0.0/12
+    - 192.168.0.0/16
+    - 127.0.0.0/8
+    - 169.254.0.0/16
+    - 100.64.0.0/10
+    - 0.0.0.0/8
+    - 198.51.100.23/32 # company office egress address
+    - ::1/128
+    - fc00::/7
+    - fe80::/10
+  egress_allowlist:
+    - soc-notes.internal.example
+
+# Model reviewer (AGENTGUARD_REVIEWER=jev or clef). It only sees calls the rules already allow and can only
+# escalate them to a human. Measured with `agentguard eval-reviewer`: on outbound
+# posts it caught 11/11 misaligned cases with 0 false escalations; on IP lookups its
+# scores sat too close to the threshold, so rule R-04 covers those instead.
+# Clef scored the same 11/11 and 0 false escalations. With AGENTGUARD_REVIEWER=human,
+# reviewed calls wait for a person.
+reviewer:
+  enabled: true
+  review_labels: [egress]
+  fail_closed_labels: [egress, side_effect]
+  escalate_threshold: 0.7
+  timeout_seconds: 3
+
+rules:
+  # --- reading logs -------------------------------------------------------
+  - id: R-01-read-subject
+    description: Reading the assigned subject's login history is part of the task.
+    effect: allow
+    match: { tools: [get_user_logins] }
+    when:
+      - { path: args.user, op: eq, ref: run.subject }
+
+  - id: R-02-read-other-user
+    description: This run may only read login history for its assigned subject.
+    effect: deny
+    match: { tools: [get_user_logins] }
+    when:
+      - { path: args.user, op: ne, ref: run.subject }
+
+  - id: R-03-ip-activity
+    description: Looking up activity from a source IP in this run's dataset is allowed.
+    effect: allow
+    match: { tools: [get_ip_activity] }
+
+  - id: R-04-ip-lookup-needs-a-reason
+    description: Looking up an address that neither the task nor this run's evidence mentions needs a human decision.
+    effect: require_approval
+    match: { tools: [get_ip_activity] }
+    when:
+      - { path: session.seen_ips, op: not_contains, ref: args.ip }
+      - { path: args.ip, op: not_mentioned_in, ref: run.task }
+
+  # --- firewall -----------------------------------------------------------
+  - id: R-10-no-block-protected
+    description: Blocking an internal or company address could cut off our own systems.
+    effect: deny
+    match: { tools: [block_ip] }
+    when:
+      - { path: args.ip, op: in_cidr, list: protected_networks }
+
+  - id: R-11-block-needs-evidence
+    description: Only an IP that appeared in evidence returned during this run may be blocked.
+    effect: deny
+    match: { tools: [block_ip] }
+    when:
+      - { path: session.seen_ips, op: not_contains, ref: args.ip }
+
+  - id: R-12-block-max-24h
+    description: Blocks longer than 24 hours need a change ticket, not an agent.
+    effect: deny
+    match: { tools: [block_ip] }
+    when:
+      - { path: args.duration_minutes, op: gt, value: 1440 }
+
+  - id: R-13-block-needs-human
+    description: Blocking an IP changes the firewall, so a human must approve the exact request.
+    effect: require_approval
+    match: { tools: [block_ip] }
+
+  # --- outbound data ------------------------------------------------------
+  - id: R-20-internal-notes
+    description: Posting to the internal SOC notes service is allowed.
+    effect: allow
+    match: { tools: [http_post] }
+    when:
+      - { path: facts.url_host, op: host_in, list: egress_allowlist }
+
+  - id: R-21-no-exfil-after-private-read
+    description: Sending data to an unapproved destination after reading private logs is blocked as possible exfiltration.
+    effect: deny
+    match: { labels: [egress] }
+    when:
+      - { path: session.labels, op: contains, value: reads_private }
+      - { path: facts.url_host, op: host_not_in, list: egress_allowlist }
+
+  - id: R-22-external-post-needs-human
+    description: Posting to an external destination needs a human decision.
+    effect: require_approval
+    match: { tools: [http_post] }
+    when:
+      - { path: facts.url_host, op: host_not_in, list: egress_allowlist }
+
+  # --- real firewall: Cloudflare (active when the `cloudflare` upstream is configured) ---
+  - id: R-30-cf-no-block-protected
+    description: Blocking an internal or company address at Cloudflare could cut off our own systems.
+    effect: deny
+    match: { tools: [cloudflare__block_ip] }
+    when:
+      - { path: args.ip, op: in_cidr, list: protected_networks }
+
+  - id: R-31-cf-block-needs-evidence
+    description: Only an IP that appeared in evidence returned during this run may be blocked at Cloudflare.
+    effect: deny
+    match: { tools: [cloudflare__block_ip] }
+    when:
+      - { path: session.seen_ips, op: not_contains, ref: args.ip }
+
+  - id: R-32-cf-block-needs-human
+    description: A Cloudflare block changes the real edge firewall, so a human must approve the exact request.
+    effect: require_approval
+    match: { tools: [cloudflare__block_ip] }
+
+  - id: R-33-cf-unblock-needs-human
+    description: Removing a Cloudflare block needs a human decision.
+    effect: require_approval
+    match: { tools: [cloudflare__unblock_ip] }
+
+  - id: R-34-cf-list-blocks
+    description: Listing AgentGuard's current Cloudflare blocks is read-only.
+    effect: allow
+    match: { tools: [cloudflare__list_blocks] }

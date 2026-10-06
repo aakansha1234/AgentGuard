@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="color-scheme" content="dark light">
+  <title>AgentGuard</title>
+  <link rel="icon" href="/static/favicon.svg" type="image/svg+xml">
+  <link rel="preload" href="/static/fonts/InterVariable.woff2" as="font" type="font/woff2" crossorigin>
+  <link rel="stylesheet" href="/static/style.css">
+  <script type="module" src="/static/app.js"></script>
+</head>
+<body>
+  <a class="skip" href="#timeline-list">Skip to timeline</a>
+
+  <header class="topbar">
+    <div class="brand">
+      <svg class="logo" viewBox="0 0 32 32" aria-hidden="true">
+        <path class="logo-shield" d="M16 2.5 4.5 7v8.2c0 7.1 4.9 12.6 11.5 14.3 6.6-1.7 11.5-7.2 11.5-14.3V7L16 2.5Z"/>
+        <path class="logo-check" d="m10.5 16.2 3.8 3.8 7.4-7.6"/>
+      </svg>
+      <span class="brand-name">AgentGuard</span>
+      <span class="brand-tag">checks every agent action before it runs</span>
+    </div>
+    <div class="status-pills" aria-label="Environment">
+      <span id="badge-mode" class="pill">Mode: –</span>
+      <span id="badge-tools" class="pill">Tools: –</span>
+      <span id="badge-reviewer" class="pill">Reviewer: –</span>
+      <span id="badge-conn" class="pill" role="status">Not connected</span>
+    </div>
+    <div class="user-menu">
+      <button id="btn-theme" class="icon-btn" type="button" aria-label="Switch colour theme" title="Switch colour theme">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3a9 9 0 1 0 9 9 7 7 0 0 1-9-9Z"/></svg>
+      </button>
+      <button id="btn-alerts" class="ghost-btn" type="button">
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M6 8a6 6 0 1 1 12 0c0 7 3 9 3 9H3s3-2 3-9"/><path d="M10.3 21a1.9 1.9 0 0 0 3.4 0"/></svg>
+        <span>Enable desktop alerts</span>
+      </button>
+      <span class="user-chip"><span id="user-avatar" class="avatar" aria-hidden="true">–</span><span id="badge-operator">–</span></span>
+      <button id="btn-logout" class="ghost-btn" type="button">Sign out</button>
+    </div>
+  </header>
+
+  <div id="login" class="login" hidden>
+    <form id="login-form" class="login-card">
+      <svg class="logo logo-lg" viewBox="0 0 32 32" aria-hidden="true">
+        <path class="logo-shield" d="M16 2.5 4.5 7v8.2c0 7.1 4.9 12.6 11.5 14.3 6.6-1.7 11.5-7.2 11.5-14.3V7L16 2.5Z"/>
+        <path class="logo-check" d="m10.5 16.2 3.8 3.8 7.4-7.6"/>
+      </svg>
+      <h1>Sign in to AgentGuard</h1>
+      <p class="muted">Paste your token: the operator token (<code>agentguard serve</code> prints where it is stored) or a personal one from <code>agentguard user add</code>.</p>
+      <label for="login-token">Token</label>
+      <input id="login-token" type="password" autocomplete="off" placeholder="agu_… or operator token" required>
+      <p id="login-error" class="error" role="alert"></p>
+      <button class="btn btn-primary btn-block" type="submit">Sign in</button>
+    </form>
+  </div>
+
+  <main id="app" class="layout" hidden>
+    <aside class="sidebar" aria-label="Runs">
+      <section class="side-section" aria-labelledby="h-new">
+        <h2 id="h-new" class="section-title">Start a run</h2>
+        <div class="scenario-buttons" id="scenario-buttons" role="group" aria-label="Demo scenarios"></div>
+        <p id="run-form-locked" class="locked-note" hidden>Starting and stopping runs needs the admin role.</p>
+        <form id="run-form" class="run-form">
+          <label for="task">Task</label>
+          <textarea id="task" rows="5" maxlength="4000" required placeholder="Pick a scenario above, or describe a task"></textarea>
+          <label for="mode">Agent</label>
+          <select id="mode">
+            <option value="live">Live: Claude Code proposes the actions</option>
+            <option value="replay">Replay: scripted proposals, same gateway</option>
+            <option value="external">External: connect any MCP agent</option>
+          </select>
+          <div class="row2">
+            <div>
+              <label for="dataset">Log dataset</label>
+              <select id="dataset"></select>
+            </div>
+            <div>
+              <label for="subject">Subject user</label>
+              <input id="subject" value="alice" pattern="[A-Za-z][A-Za-z0-9._\-]{0,63}" required>
+            </div>
+          </div>
+          <label for="enforcement">Enforcement</label>
+          <select id="enforcement">
+            <option value="enforce">Enforce: block and hold for approval</option>
+            <option value="shadow">Monitor only: record what would be blocked</option>
+          </select>
+          <p id="mode-hint" class="hint"></p>
+          <p id="run-error" class="error" role="alert"></p>
+          <button id="btn-run" class="btn btn-primary btn-block" type="submit">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5-12-7.5Z"/></svg>
+            <span>Run</span>
+          </button>
+        </form>
+      </section>
+
+      <section class="side-section" aria-labelledby="h-history">
+        <h2 id="h-history" class="section-title">Run history</h2>
+        <ul id="run-list" class="run-list"></ul>
+      </section>
+    </aside>
+
+    <section class="main" aria-label="Selected run">
+      <div id="empty-state" class="empty">
+        <svg class="empty-art" viewBox="0 0 120 120" aria-hidden="true">
+          <circle cx="60" cy="60" r="54"/>
+          <path class="logo-shield" d="M60 26 38 34.5v16c0 13.5 9.3 24 22 27.3 12.7-3.3 22-13.8 22-27.3v-16L60 26Z"/>
+          <path class="logo-check" d="m49.5 51 7.5 7.5 14.5-15"/>
+        </svg>
+        <h2>No run selected</h2>
+        <p class="muted">Pick a scenario on the left and press Run, or open a past run.</p>
+      </div>
+
+      <div id="run-view" hidden>
+        <div class="run-head">
+          <div class="run-head-text">
+            <h2 id="run-title">Run</h2>
+            <p id="run-sub" class="run-meta"></p>
+          </div>
+          <button id="btn-stop" class="btn btn-danger" type="button">
+            <svg viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="6" width="12" height="12" rx="2"/></svg>
+            <span>Stop run</span>
+          </button>
+        </div>
+
+        <div class="cards" role="group" aria-label="Run status">
+          <div class="card card-state">
+            <span class="card-label"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M12 3v3m0 12v3M4.2 7.5l2.6 1.5m10.4 6 2.6 1.5M4.2 16.5 6.8 15m10.4-6 2.6-1.5"/><circle cx="12" cy="12" r="3.5"/></svg>Agent</span>
+            <span id="card-state" class="card-value">–</span>
+          </div>
+          <div class="card">
+            <span class="card-label"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="m5 12.5 4.5 4.5L19 7.5"/></svg>Actions checked</span>
+            <span id="card-checked" class="card-value">0</span>
+          </div>
+          <div class="card card-blocked">
+            <span class="card-label"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="m6 6 12 12"/></svg>Blocked</span>
+            <span id="card-blocked" class="card-value">0</span>
+            <span id="card-blocked-sub" class="card-sub"></span>
+          </div>
+          <div class="card card-pending">
+            <span class="card-label"><svg viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>Waiting for you</span>
+            <span id="card-pending" class="card-value">0</span>
+          </div>
+        </div>
+
+        <div id="approvals" aria-live="polite"></div>
+
+        <section class="panel" aria-labelledby="h-timeline">
+          <div class="panel-head">
+            <h2 id="h-timeline">Timeline</h2>
+            <label class="switch"><input id="show-all" type="checkbox"><span class="switch-track" aria-hidden="true"></span>show raw audit log</label>
+          </div>
+          <ol id="timeline-list" class="timeline" tabindex="-1"></ol>
+        </section>
+
+        <section id="summary-panel" class="panel" aria-labelledby="h-summary" hidden>
+          <h2 id="h-summary">What happened</h2>
+          <ul id="outcome-list" class="outcome-list"></ul>
+          <h3 class="report-h">The agent's report</h3>
+          <div id="summary-check" class="summary-check"></div>
+          <div id="summary-text" class="summary-text"></div>
+        </section>
+      </div>
+    </section>
+
+    <aside class="inspector" aria-label="Inspector">
+      <div class="tabs" role="tablist" aria-label="Inspector">
+        <button id="tab-details" class="tab" role="tab" type="button" aria-selected="true" aria-controls="pane-details">Details</button>
+        <button id="tab-policy" class="tab" role="tab" type="button" aria-selected="false" aria-controls="pane-policy">Policy</button>
+      </div>
+      <section id="pane-details" class="pane details" role="tabpanel" aria-labelledby="h-details">
+        <h2 id="h-details" class="sr-only">Details</h2>
+        <div id="details"><p class="muted">Select a timeline entry to see the exact arguments, the rules that decided it, and what happened.</p></div>
+      </section>
+      <section id="pane-policy" class="pane" role="tabpanel" aria-labelledby="h-policy" hidden>
+        <h2 id="h-policy" class="sr-only">Rules in force</h2>
+        <p id="policy-meta" class="muted small"></p>
+        <ul id="policy-rules" class="rules"></ul>
+      </section>
+    </aside>
+  </main>
+
+  <dialog id="connect-dialog">
+    <h2>Connect your agent</h2>
+    <p>This run token is shown once. Anyone holding it can propose actions for this run; every call is still checked.</p>
+    <pre id="connect-text" class="code"></pre>
+    <form method="dialog"><button class="btn btn-primary">Done</button></form>
+  </dialog>
+
+  <div id="announcer" class="sr-only" aria-live="polite"></div>
+</body>
+</html>

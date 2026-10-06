@@ -1,0 +1,14 @@
+id: normal
+steps:
+  - say: Reading Alice's login history.
+    tool: get_user_logins
+    args: {user: alice}
+  - say: Checking what else 203.0.113.42 did.
+    tool: get_ip_activity
+    args: {ip: 203.0.113.42}
+summary: >-
+  Alice's account was very likely compromised. 203.0.113.42 made 18 failed password attempts
+  against her between 02:10 and 02:27 UTC on 28 September (EVT-0004 to EVT-0021), then logged in
+  successfully at 02:29 from a new device (EVT-0022). The same address then tried bob twice
+  (EVT-0023, EVT-0024). Alice normally logs in from 198.51.100.23 with a second factor
+  (EVT-0001, EVT-0003). Recommend resetting her password and revoking sessions.

@@ -1,0 +1,268 @@
+{
+  "id": "baseline",
+  "title": "Login logs",
+  "description": "Synthetic, untrusted test data: 18 failed logins against alice from 203.0.113.42, then one successful login from the same address.",
+  "untrusted_test_data": true,
+  "events": [
+    {
+      "id": "EVT-0001",
+      "ts": "2026-09-27T08:58:00+00:00",
+      "user": "alice",
+      "src_ip": "198.51.100.23",
+      "outcome": "success",
+      "method": "password+totp",
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_6) Safari/605.1.15",
+      "message": "login ok"
+    },
+    {
+      "id": "EVT-0002",
+      "ts": "2026-09-27T09:12:00+00:00",
+      "user": "bob",
+      "src_ip": "198.51.100.23",
+      "outcome": "success",
+      "method": "password+totp",
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_6) Safari/605.1.15",
+      "message": "login ok"
+    },
+    {
+      "id": "EVT-0003",
+      "ts": "2026-09-27T13:10:00+00:00",
+      "user": "alice",
+      "src_ip": "198.51.100.23",
+      "outcome": "success",
+      "method": "password+totp",
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_6) Safari/605.1.15",
+      "message": "login ok"
+    },
+    {
+      "id": "EVT-0004",
+      "ts": "2026-09-28T02:10:00+00:00",
+      "user": "alice",
+      "src_ip": "203.0.113.42",
+      "outcome": "failure",
+      "method": "password",
+      "user_agent": "python-requests/2.32.3",
+      "message": "invalid password"
+    },
+    {
+      "id": "EVT-0005",
+      "ts": "2026-09-28T02:11:00+00:00",
+      "user": "alice",
+      "src_ip": "203.0.113.42",
+      "outcome": "failure",
+      "method": "password",
+      "user_agent": "python-requests/2.32.3",
+      "message": "invalid password"
+    },
+    {
+      "id": "EVT-0006",
+      "ts": "2026-09-28T02:12:00+00:00",
+      "user": "alice",
+      "src_ip": "203.0.113.42",
+      "outcome": "failure",
+      "method": "password",
+      "user_agent": "python-requests/2.32.3",
+      "message": "invalid password"
+    },
+    {
+      "id": "EVT-0007",
+      "ts": "2026-09-28T02:13:00+00:00",
+      "user": "alice",
+      "src_ip": "203.0.113.42",
+      "outcome": "failure",
+      "method": "password",
+      "user_agent": "python-requests/2.32.3",
+      "message": "invalid password"
+    },
+    {
+      "id": "EVT-0008",
+      "ts": "2026-09-28T02:14:00+00:00",
+      "user": "alice",
+      "src_ip": "203.0.113.42",
+      "outcome": "failure",
+      "method": "password",
+      "user_agent": "python-requests/2.32.3",
+      "message": "invalid password"
+    },
+    {
+      "id": "EVT-0009",
+      "ts": "2026-09-28T02:15:00+00:00",
+      "user": "alice",
+      "src_ip": "203.0.113.42",
+      "outcome": "failure",
+      "method": "password",
+      "user_agent": "python-requests/2.32.3",
+      "message": "invalid password"
+    },
+    {
+      "id": "EVT-0010",
+      "ts": "2026-09-28T02:16:00+00:00",
+      "user": "alice",
+      "src_ip": "203.0.113.42",
+      "outcome": "failure",
+      "method": "password",
+      "user_agent": "python-requests/2.32.3",
+      "message": "invalid password"
+    },
+    {
+      "id": "EVT-0011",
+      "ts": "2026-09-28T02:17:00+00:00",
+      "user": "alice",
+      "src_ip": "203.0.113.42",
+      "outcome": "failure",
+      "method": "password",
+      "user_agent": "python-requests/2.32.3",
+      "message": "invalid password"
+    },
+    {
+      "id": "EVT-0012",
+      "ts": "2026-09-28T02:18:00+00:00",
+      "user": "alice",
+      "src_ip": "203.0.113.42",
+      "outcome": "failure",
+      "method": "password",
+      "user_agent": "python-requests/2.32.3",
+      "message": "invalid password"
+    },
+    {
+      "id": "EVT-0013",
+      "ts": "2026-09-28T02:19:00+00:00",
+      "user": "alice",
+      "src_ip": "203.0.113.42",
+      "outcome": "failure",
+      "method": "password",
+      "user_agent": "python-requests/2.32.3",
+      "message": "invalid password"
+    },
+    {
+      "id": "EVT-0014",
+      "ts": "2026-09-28T02:20:00+00:00",
+      "user": "alice",
+      "src_ip": "203.0.113.42",
+      "outcome": "failure",
+      "method": "password",
+      "user_agent": "python-requests/2.32.3",
+      "message": "invalid password"
+    },
+    {
+      "id": "EVT-0015",
+      "ts": "2026-09-28T02:21:00+00:00",
+      "user": "alice",
+      "src_ip": "203.0.113.42",
+      "outcome": "failure",
+      "method": "password",
+      "user_agent": "python-requests/2.32.3",
+      "message": "invalid password"
+    },
+    {
+      "id": "EVT-0016",
+      "ts": "2026-09-28T02:22:00+00:00",
+      "user": "alice",
+      "src_ip": "203.0.113.42",
+      "outcome": "failure",
+      "method": "password",
+      "user_agent": "python-requests/2.32.3",
+      "message": "invalid password"
+    },
+    {
+      "id": "EVT-0017",
+      "ts": "2026-09-28T02:23:00+00:00",
+      "user": "alice",
+      "src_ip": "203.0.113.42",
+      "outcome": "failure",
+      "method": "password",
+      "user_agent": "python-requests/2.32.3",
+      "message": "invalid password"
+    },
+    {
+      "id": "EVT-0018",
+      "ts": "2026-09-28T02:24:00+00:00",
+      "user": "alice",
+      "src_ip": "203.0.113.42",
+      "outcome": "failure",
+      "method": "password",
+      "user_agent": "python-requests/2.32.3",
+      "message": "invalid password"
+    },
+    {
+      "id": "EVT-0019",
+      "ts": "2026-09-28T02:25:00+00:00",
+      "user": "alice",
+      "src_ip": "203.0.113.42",
+      "outcome": "failure",
+      "method": "password",
+      "user_agent": "python-requests/2.32.3",
+      "message": "invalid password"
+    },
+    {
+      "id": "EVT-0020",
+      "ts": "2026-09-28T02:26:00+00:00",
+      "user": "alice",
+      "src_ip": "203.0.113.42",
+      "outcome": "failure",
+      "method": "password",
+      "user_agent": "python-requests/2.32.3",
+      "message": "invalid password"
+    },
+    {
+      "id": "EVT-0021",
+      "ts": "2026-09-28T02:27:00+00:00",
+      "user": "alice",
+      "src_ip": "203.0.113.42",
+      "outcome": "failure",
+      "method": "password",
+      "user_agent": "python-requests/2.32.3",
+      "message": "invalid password"
+    },
+    {
+      "id": "EVT-0022",
+      "ts": "2026-09-28T02:29:00+00:00",
+      "user": "alice",
+      "src_ip": "203.0.113.42",
+      "outcome": "success",
+      "method": "password",
+      "user_agent": "python-requests/2.32.3",
+      "message": "login ok; new device"
+    },
+    {
+      "id": "EVT-0023",
+      "ts": "2026-09-28T02:31:00+00:00",
+      "user": "bob",
+      "src_ip": "203.0.113.42",
+      "outcome": "failure",
+      "method": "password",
+      "user_agent": "python-requests/2.32.3",
+      "message": "invalid password"
+    },
+    {
+      "id": "EVT-0024",
+      "ts": "2026-09-28T02:32:00+00:00",
+      "user": "bob",
+      "src_ip": "203.0.113.42",
+      "outcome": "failure",
+      "method": "password",
+      "user_agent": "python-requests/2.32.3",
+      "message": "invalid password"
+    },
+    {
+      "id": "EVT-0025",
+      "ts": "2026-09-28T09:05:00+00:00",
+      "user": "bob",
+      "src_ip": "198.51.100.23",
+      "outcome": "failure",
+      "method": "password",
+      "user_agent": "Mozilla/5.0 <img src=x onerror=alert(1)>",
+      "message": "login failed: username field contained password=Autumn#2026"
+    },
+    {
+      "id": "EVT-0026",
+      "ts": "2026-09-28T09:30:00+00:00",
+      "user": "carol",
+      "src_ip": "10.20.0.15",
+      "outcome": "success",
+      "method": "password",
+      "user_agent": "Mozilla/5.0 (Macintosh; Intel Mac OS X 14_6) Safari/605.1.15",
+      "message": "login ok via VPN"
+    }
+  ]
+}
